@@ -1,0 +1,40 @@
+name: Geo Region Count Dataset
+description: |
+  This dataset provides a count of unique regions for each state from the `geo` table. 
+  The query dynamically filters by state if specified through user input.
+columns:
+  - name: state
+    description: The state name or identifier.
+    type: string
+    filters:
+      - description: Filters the dataset by one or more specified states.
+        example: ["California", "Texas"]
+  - name: unique_region_name_count
+    description: The count of unique regions within the specified state(s).
+    type: integer
+parameters:
+  - name: state
+    description: |
+      A filter parameter that allows the selection of specific state(s) for analysis. 
+      If not specified, data for all states is included.
+    type: list
+    required: false
+    example: ["California", "Texas"]
+sql_query: |
+  {% set state = filter_values("state", remove_filter=True) %}
+
+  SELECT 
+    state,
+    COUNT(DISTINCT region) AS unique_region_name_count
+  FROM geo
+  WHERE 1 = 1
+    {% if state %}
+      AND state IN ({{ state | join(', ') }})
+    {% endif %}
+  GROUP BY
+    state
+  ORDER BY
+    state;
+notes:
+  - Make sure the `state` parameter is passed as a list of valid state names.
+  - The query uses dynamic filtering for flexibility in state selection.
